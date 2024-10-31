@@ -73,9 +73,9 @@ void EnterTheN(double &n) {
 
 void EnterTheRange(double &a, double &b, double &step) {
     if (!cin.fail()) {
-        cout << string(30, '=') << endl;
+        cout << string(75, '=') << endl;
         cout << "|        Enter The Range     |" << endl;
-        cout << string(30, '=') << endl;
+        cout << string(75, '=') << endl;
     }
 
     if (isnan(a)) {
