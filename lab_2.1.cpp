@@ -3,6 +3,7 @@
 #include <limits>
 #include <string>
 #include <iomanip>
+#include <stdexcept>
 
 using namespace std;
 
@@ -26,90 +27,98 @@ double getValidatedDoubleInput(const string& prompt) {
     double value;
     cout << prompt;
     while (true) {
-        cin >> value;
-        if (cin.fail()) {
-            cerr << "Incorrect input! Here must be a number!" << endl;
+        try {
+            cin >> value;
+            if (cin.fail()) {
+                throw invalid_argument("Incorrect input! Here must be a number!");
+            }
+            return value;
+        }
+        catch (const invalid_argument& e) {
+            cerr << e.what() << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Please, try again: " << prompt;
-        } else {
-            return value;
         }
     }
 }
 
 void EnterTheNumbers(double &x, double &n) {
-    if (!cin.fail()) {
+    try {
         cout << string(30, '=') << endl;
         cout << "|        Enter The Numbers     |" << endl;
         cout << string(30, '=') << endl;
-    }
 
-    if (!cin.fail() && isnan(x)) {
         x = getValidatedDoubleInput("Enter X: ");
-    }
-    
-    while (true) {
-        n = getValidatedDoubleInput("Enter N (N should be greater than I and (N + 2) greater than J): ");
         
-        if ((x >= 0 && (n <= 0.0 || (n + 2) <= 1.0)) || (x < 0 && n < 3)) {
-            cerr << "Incorrect input! N should be greater than I and (N + 2) greater than J!" << endl;
-        } else {
-            break;
+        while (true) {
+            n = getValidatedDoubleInput("Enter N (N should be greater than I and (N + 2) greater than J): ");
+            if ((x >= 0 && (n <= 0.0 || (n + 2) <= 1.0)) || (x < 0 && n < 3)) {
+                throw invalid_argument("Incorrect input! N should be greater than I and (N + 2) greater than J!");
+            } else {
+                break;
+            }
         }
+    }
+    catch (const invalid_argument& e) {
+        cerr << e.what() << endl;
+        EnterTheNumbers(x, n);
     }
 }
 
 void EnterTheN(double &n) {
-    while (true) {
-        n = getValidatedDoubleInput("Enter N: ");
-        if (n < 3) {
-            cerr << "Incorrect input! N should be greater than 3!" << endl;
-        } else {
-            break;
+    try {
+        while (true) {
+            n = getValidatedDoubleInput("Enter N: ");
+            if (n < 3) {
+                throw invalid_argument("Incorrect input! N should be greater than 3!");
+            } else {
+                break;
+            }
         }
+    }
+    catch (const invalid_argument& e) {
+        cerr << e.what() << endl;
+        EnterTheN(n);
     }
 }
 
 void EnterTheRange(double &a, double &b, double &step) {
-    if (!cin.fail()) {
-        cout << string(75, '=') << endl;
-        cout << "|        Enter The Range     |" << endl;
-        cout << string(75, '=') << endl;
-    }
+    try {
+        cout << string(30, '=') << endl;
+        cout << "|        Enter The Range       |" << endl;
+        cout << string(30, '=') << endl;
 
-    if (isnan(a)) {
-        a = getValidatedDoubleInput("Enter A (lower range): ");
-    }
-
-    if (isnan(b)) {
-        b = getValidatedDoubleInput("Enter B (upper range): ");
-    }
-
-    if (isnan(step)) {
-        step = getValidatedDoubleInput("Enter step: ");
-    }
-
-    while (a > b || step <= 0) {
-        cerr << "Incorrect input! B must be greater than A and step must be positive!" << endl;
         a = getValidatedDoubleInput("Enter A (lower range): ");
         b = getValidatedDoubleInput("Enter B (upper range): ");
         step = getValidatedDoubleInput("Enter step: ");
+        
+        while (a > b || step <= 0) {
+            throw invalid_argument("Incorrect input! B must be greater than A and step must be positive!");
+        }
+    }
+    catch (const invalid_argument& e) {
+        cerr << e.what() << endl;
+        EnterTheRange(a, b, step);
     }
 }
 
 void PickTheAlgorithm(string &algo) {
     cout << "Do you want to use simple or extended algorithm? (S/e): ";
     while (true) {
-        cin >> algo;
-        if (cin.fail() || (algo != "S" && algo != "s" && algo != "E" && algo != "e")) {
-            cerr << "Incorrect input! You must enter 'S'/'s' or 'E'/'e'!" << endl;
+        try {
+            cin >> algo;
+            if (cin.fail() || (algo != "S" && algo != "s" && algo != "E" && algo != "e")) {
+                throw invalid_argument("Incorrect input! You must enter 'S'/'s' or 'E'/'e'!");
+            } else {
+                break;
+            }
+        }
+        catch (const invalid_argument& e) {
+            cerr << e.what() << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Please, try again: ";
-        } 
-        else {
-            break;
         }
     }
 }
@@ -117,50 +126,62 @@ void PickTheAlgorithm(string &algo) {
 double calculateY(double x, int n) {
     double res = 0;
     double sol = 1.0;
-
-    if (x >= 0) {
-        for (int i = 0; i <= n; ++i) {
-            sol = 1.0;
-            for (int j = 1; j <= n + 2; ++j) {
-                sol *= pow((9 * i - j + pow(j, 3)), 2);
+    
+    try {
+        if (x >= 0) {
+            for (int i = 0; i <= n; ++i) {
+                sol = 1.0;
+                for (int j = 1; j <= n + 2; ++j) {
+                    sol *= pow((9 * i - j + pow(j, 3)), 2);
+                }
+                res += sol;
             }
-            res += sol;
+            return res;
+        } 
+        else {
+            sol = 0;
+            for (int i = 3; i <= n; ++i) {
+                sol += 1.0 / (2.0 * i) + 1.0 / x;
+            }
+            return (x + 3) * sol;
         }
-        return res;
-    } else {
-        sol = 0;
-        for (int i = 3; i <= n; ++i) {
-            sol += 1.0 / (2.0 * i) + 1.0 / x;
-        }
-        return (x + 3) * sol;
+    }
+    catch (...) {
+        cerr << "An error occurred during calculation." << endl;
+        return NAN;
     }
 }
 
 void CalculateExtendedY(double n, double y, double a, double b, double step) {
-    int maxXWidth = 0;
-    int maxYWidth = 0;
-    double x = a;
+    try {
+        int maxXWidth = 0;
+        int maxYWidth = 0;
+        double x = a;
 
-    for (; x <= b;) {
-        y = calculateY(x, n);
-        maxXWidth = max(maxXWidth, countCharacters(x));
-        maxYWidth = max(maxYWidth, countCharacters(y));
-        x = x + step;
-    }
+        for (; x <= b;) {
+            y = calculateY(x, n);
+            maxXWidth = max(maxXWidth, countCharacters(x));
+            maxYWidth = max(maxYWidth, countCharacters(y));
+            x = x + step;
+        }
 
-    x = a;
-    int widthX = maxXWidth + 8;
-    int widthY = maxYWidth + 10;
+        x = a;
+        int widthX = maxXWidth + 8;
+        int widthY = maxYWidth + 10;
 
-    cout << string(widthX + widthY + 3, '=') << endl;
-    cout << "|" << setw(widthX) << "X" << "|" << setw(widthY) << "Y" << "|" << endl;
-    cout << string(widthX + widthY + 3, '=') << endl;
-
-    for (; x <= b;) {
-        y = calculateY(x, n);
-        cout << "|" << setw(widthX) << fixed << setprecision(2) << x << "|" << setw(widthY) << fixed << setprecision(2) << y << "|" << endl;
         cout << string(widthX + widthY + 3, '=') << endl;
-        x = x + step;
+        cout << "|" << setw(widthX) << "X" << "|" << setw(widthY) << "Y" << "|" << endl;
+        cout << string(widthX + widthY + 3, '=') << endl;
+
+        for (; x <= b;) {
+            y = calculateY(x, n);
+            cout << "|" << setw(widthX) << fixed << setprecision(2) << x << "|" << setw(widthY) << fixed << setprecision(2) << y << "|" << endl;
+            cout << string(widthX + widthY + 3, '=') << endl;
+            x = x + step;
+        }
+    }
+    catch (...) {
+        cerr << "An error occurred during extended calculation." << endl;
     }
 }
 
