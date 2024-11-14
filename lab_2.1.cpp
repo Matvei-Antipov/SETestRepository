@@ -1,3 +1,4 @@
+#define TEST_MODE
 #include <iostream>
 #include <cmath>
 #include <limits>
@@ -7,6 +8,7 @@
 
 using namespace std;
 
+// Function to count the number of characters in different types
 int countCharacters(const string& str) {
     return str.size();
 }
@@ -16,13 +18,36 @@ int countCharacters(int number) {
 }
 
 int countCharacters(double number) {
-    return countCharacters(to_string(number));
+    string str;
+
+    // Special case for zero
+    if (number == 0.0) {
+        str = "0.0";  // Ensure 0.0 is represented with 3 characters
+    } else {
+        // Handle negative numbers
+        if (number < 0) {
+            str = "-" + to_string(-number);  // Add minus and convert the absolute value to string
+        } else {
+            str = to_string(number);
+        }
+
+        // Remove unnecessary trailing zeros and the decimal point if not needed
+        str = str.substr(0, str.find_last_not_of('0') + 1);
+        
+        // If the number is an integer (e.g., 123.), remove the decimal point
+        if (str.back() == '.') {
+            str = str.substr(0, str.size() - 1);
+        }
+    }
+
+    return str.size();  // Return the size including minus and decimal point
 }
 
 int countCharacters(const char* str) {
     return countCharacters(string(str));
 }
 
+// Function to get validated double input
 double getValidatedDoubleInput(const string& prompt) {
     double value;
     cout << prompt;
@@ -30,11 +55,10 @@ double getValidatedDoubleInput(const string& prompt) {
         try {
             cin >> value;
             if (cin.fail()) {
-                throw invalid_argument("Incorrect input! Here must be a number!");
+                throw invalid_argument("Incorrect input! Please enter a number.");
             }
             return value;
-        }
-        catch (const invalid_argument& e) {
+        } catch (const invalid_argument& e) {
             cerr << e.what() << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -43,7 +67,8 @@ double getValidatedDoubleInput(const string& prompt) {
     }
 }
 
-void EnterTheNumbers(double &x, double &n) {
+// Function to enter X and N values
+void EnterTheNumbers(double& x, double& n) {
     try {
         cout << string(30, '=') << endl;
         cout << "|        Enter The Numbers     |" << endl;
@@ -59,31 +84,14 @@ void EnterTheNumbers(double &x, double &n) {
                 break;
             }
         }
-    }
-    catch (const invalid_argument& e) {
+    } catch (const invalid_argument& e) {
         cerr << e.what() << endl;
-        EnterTheNumbers(x, n);
+        EnterTheNumbers(x, n);  // Recursive call to handle invalid input
     }
 }
 
-void EnterTheN(double &n) {
-    try {
-        while (true) {
-            n = getValidatedDoubleInput("Enter N: ");
-            if (n < 3) {
-                throw invalid_argument("Incorrect input! N should be greater than 3!");
-            } else {
-                break;
-            }
-        }
-    }
-    catch (const invalid_argument& e) {
-        cerr << e.what() << endl;
-        EnterTheN(n);
-    }
-}
-
-void EnterTheRange(double &a, double &b, double &step) {
+// Function to enter the range and step values
+void EnterTheRange(double& a, double& b, double& step) {
     try {
         cout << string(30, '=') << endl;
         cout << "|        Enter The Range       |" << endl;
@@ -96,14 +104,14 @@ void EnterTheRange(double &a, double &b, double &step) {
         while (a > b || step <= 0) {
             throw invalid_argument("Incorrect input! B must be greater than A and step must be positive!");
         }
-    }
-    catch (const invalid_argument& e) {
+    } catch (const invalid_argument& e) {
         cerr << e.what() << endl;
-        EnterTheRange(a, b, step);
+        EnterTheRange(a, b, step);  // Recursive call to handle invalid input
     }
 }
 
-void PickTheAlgorithm(string &algo) {
+// Function to pick the algorithm type (Simple or Extended)
+void PickTheAlgorithm(string& algo) {
     cout << "Do you want to use simple or extended algorithm? (S/e): ";
     while (true) {
         try {
@@ -113,8 +121,7 @@ void PickTheAlgorithm(string &algo) {
             } else {
                 break;
             }
-        }
-        catch (const invalid_argument& e) {
+        } catch (const invalid_argument& e) {
             cerr << e.what() << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -123,8 +130,9 @@ void PickTheAlgorithm(string &algo) {
     }
 }
 
+// Function to calculate Y for the simple algorithm
 double calculateY(double x, int n) {
-    double res = 0;
+    double result = 0.0;
     double sol = 1.0;
     
     try {
@@ -134,24 +142,23 @@ double calculateY(double x, int n) {
                 for (int j = 1; j <= n + 2; ++j) {
                     sol *= pow((9 * i - j + pow(j, 3)), 2);
                 }
-                res += sol;
+                result += sol;
             }
-            return res;
-        } 
-        else {
+            return result;
+        } else {
             sol = 0;
             for (int i = 3; i <= n; ++i) {
                 sol += 1.0 / (2.0 * i) + 1.0 / x;
             }
             return (x + 3) * sol;
         }
-    }
-    catch (...) {
+    } catch (...) {
         cerr << "An error occurred during calculation." << endl;
         return NAN;
     }
 }
 
+// Function to calculate extended Y with the range and step
 void CalculateExtendedY(double n, double y, double a, double b, double step) {
     try {
         int maxXWidth = 0;
@@ -179,12 +186,12 @@ void CalculateExtendedY(double n, double y, double a, double b, double step) {
             cout << string(widthX + widthY + 3, '=') << endl;
             x = x + step;
         }
-    }
-    catch (...) {
+    } catch (...) {
         cerr << "An error occurred during extended calculation." << endl;
     }
 }
 
+#ifndef TEST_MODE
 int main() {
     double x = NAN, n, a = NAN, b = NAN, step = NAN, y;
     string answer, algo;
@@ -202,9 +209,7 @@ int main() {
             cout << string(50 + countCharacters(y), '=') << endl;
             cout << "|" << setw(width) << fixed << y << setw(25 + countCharacters(y)) << " |" << endl;
             cout << string(50 + countCharacters(y), '=') << endl;
-        } 
-        else {
-            EnterTheN(n);
+        } else {
             EnterTheRange(a, b, step);
             CalculateExtendedY(n, y, a, b, step);
         }
@@ -220,3 +225,4 @@ int main() {
 
     return 0;
 }
+#endif
