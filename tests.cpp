@@ -4,6 +4,8 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <thread>
+#include <chrono>
 #include "lab_2.1.h" // Replace with the correct header file if necessary
 
 #define ASSERT_EQUAL(actual, expected) \
@@ -24,6 +26,50 @@
             assert(false); \
         } \
     } while (false)
+
+// Helper struct to describe a test
+struct TestInfo {
+    std::string testName;
+    std::string functionName;
+    void (*testFunction)();
+};
+
+// Function to display a progress bar
+void updateProgressBar(int currentProgress, int maxProgress) {
+    int barWidth = 50;  // Width of the progress bar
+    int percentCompleted = static_cast<int>((static_cast<double>(currentProgress) / maxProgress) * 100);
+    int pos = static_cast<int>(barWidth * percentCompleted / 100);
+
+    std::cout << "[";
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << percentCompleted << " %\r";
+    std::cout.flush();
+}
+
+// Function to run a test and display its details
+void runTest(const TestInfo &testInfo, int current, int total) {
+    std::cout << "\nRunning test: " << testInfo.testName << std::endl;
+    std::cout << "Testing function: " << testInfo.functionName << std::endl;
+    
+    try {
+        testInfo.testFunction();
+        std::cout << testInfo.testName << " passed!" << std::endl;
+    } catch (...) {
+        std::cout << testInfo.testName << " failed!" << std::endl;
+        throw;
+    }
+
+    // Update the progress bar as the test passes
+    updateProgressBar(current, total);
+    std::cout << "\n";
+    
+    // Delay to visualize the progress bar filling up step by step
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
 
 // Test countCharacters for strings
 void testCountCharacters() {
@@ -96,20 +142,35 @@ void testPickTheAlgorithm() {
 // Test calculateY function
 void testCalculateY() {
     ASSERT_NEAR(calculateY(2.0, 3), 3.77445e+17, 1e+14);  // Check simple calculation
-    ASSERT_NEAR(calculateY(-1.0, 3), -1.66667, 0.01);          // Check negative x handling
+    ASSERT_NEAR(calculateY(-1.0, 3), -1.66667, 0.01);     // Check negative x handling
 }
 
 // Main function to execute all tests
 int main() {
-    testCountCharacters();
-    testCountCharactersInt();
-    testCountCharactersDouble();
-    testGetValidatedDoubleInput();
-    testEnterTheNumbers();
-    testEnterTheRange();
-    testPickTheAlgorithm();
-    testCalculateY();
+    TestInfo tests[] = {
+        {"Test countCharacters (strings)", "countCharacters", testCountCharacters},
+        {"Test countCharacters (integers)", "countCharacters", testCountCharactersInt},
+        {"Test countCharacters (doubles)", "countCharacters", testCountCharactersDouble},
+        {"Test getValidatedDoubleInput", "getValidatedDoubleInput", testGetValidatedDoubleInput},
+        {"Test EnterTheNumbers", "EnterTheNumbers", testEnterTheNumbers},
+        {"Test EnterTheRange", "EnterTheRange", testEnterTheRange},
+        {"Test PickTheAlgorithm", "PickTheAlgorithm", testPickTheAlgorithm},
+        {"Test calculateY", "calculateY", testCalculateY}
+    };
 
-    std::cout << "\n\nAll tests passed successfully!" << std::endl;
+    const int totalTests = sizeof(tests) / sizeof(tests[0]);
+
+    try {
+        for (int i = 0; i < totalTests; ++i) {
+            runTest(tests[i], i + 1, totalTests);
+        }
+
+        // Ensure the progress bar reaches 100% at the end
+        updateProgressBar(totalTests, totalTests);
+        std::cout << "\n\nAll tests passed successfully!" << std::endl;
+    } catch (...) {
+        std::cout << "\n\nSome tests failed!" << std::endl;
+    }
+
     return 0;
 }
